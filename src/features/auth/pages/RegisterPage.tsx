@@ -18,7 +18,7 @@ export function RegisterPage() {
 
   const onSubmit = handleSubmit((values) =>
     registerUser.mutate(values, {
-      onSuccess: () => navigate(`/verify-email?email=${encodeURIComponent(values.email)}`),
+      onSuccess: () => navigate('/organization/setup'),
     }),
   )
 

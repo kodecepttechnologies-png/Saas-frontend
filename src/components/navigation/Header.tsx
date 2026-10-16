@@ -29,20 +29,11 @@ export function Header({ onMenuClick, menuButtonRef }: HeaderProps) {
         <Menu aria-hidden="true" className="h-6 w-6" />
       </button>
 
-      <Link
-        to="/dashboard"
-        className="flex items-center gap-2 rounded-lg font-extrabold focus-visible:ring-2 focus-visible:ring-white p-1"
-        aria-label="Go to workspace dashboard"
-      >
-        <OrganizationBrand
-          size="sm"
-          logoClassName="bg-white/15 border-white/25 text-white"
-          nameClassName="text-white text-sm sm:text-base font-extrabold"
-          showSubtitle={false}
-        />
+      <Link to="/dashboard" className="min-w-0 rounded-lg">
+        <OrganizationBrand size="sm" tone="onPrimary" />
       </Link>
 
-      <div className="ml-auto flex items-center gap-1 sm:gap-3">
+      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
         {name && <span className="hidden max-w-[14rem] truncate text-sm text-white/90 sm:block">{name}</span>}
         <button type="button" onClick={signOut} aria-label="Sign out" className={headerButton}>
           <LogOut aria-hidden="true" className="h-5 w-5" />

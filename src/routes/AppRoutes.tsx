@@ -6,6 +6,9 @@ import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { OrganizationSetupPage } from '@/features/organization/pages/OrganizationSetupPage'
+import { CreateRolePage } from '@/features/roles/pages/CreateRolePage'
+import { RoleSuccessPage } from '@/features/roles/pages/RoleSuccessPage'
+import { RolesPage } from '@/features/roles/pages/RolesPage'
 import { AppLayout } from '@/layouts/AppLayout/AppLayout'
 import { AuthLayout } from '@/layouts/AuthLayout/AuthLayout'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -40,11 +43,14 @@ export function AppRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
-      {/* Signed-in app: header + sidebar shell */}
+      {/* Signed-in app */}
       <Route element={<ProtectedRoute />}>
+        <Route path="/organization/setup" element={<OrganizationSetupPage />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/organization/setup" element={<OrganizationSetupPage />} />
+          <Route path="/roles" element={<RolesPage />} />
+          <Route path="/create-role" element={<CreateRolePage />} />
+          <Route path="/roles/success" element={<RoleSuccessPage />} />
         </Route>
       </Route>
 

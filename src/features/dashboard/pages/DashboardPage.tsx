@@ -28,9 +28,9 @@ export function DashboardPage() {
                 size="lg"
                 subtitle={
                   organization.industry
-                    ? `${organization.industry} • ${organization.workspaceUrl ? `${organization.workspaceUrl}.workspace` : 'Workspace'}`
-                    : organization.workspaceUrl
-                      ? `${organization.workspaceUrl}.workspace`
+                    ? `${organization.industry} • ${(organization.slug || organization.workspaceUrl) ? `${organization.slug || organization.workspaceUrl}.workspace` : 'Workspace'}`
+                    : (organization.slug || organization.workspaceUrl)
+                      ? `${organization.slug || organization.workspaceUrl}.workspace`
                       : 'Active SaaS Tenant'
                 }
               />
@@ -60,7 +60,7 @@ export function DashboardPage() {
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-primary-hover shrink-0" />
               <span className="truncate font-mono">
-                Slug: <strong className="text-fg font-medium">{organization.workspaceUrl || '—'}</strong>
+                Slug: <strong className="text-fg font-medium">{organization.slug || organization.workspaceUrl || '—'}</strong>
               </span>
             </div>
             <div className="flex items-center gap-2">

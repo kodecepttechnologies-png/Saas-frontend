@@ -15,8 +15,13 @@ import { extractAuthSession, extractUser } from '../utils/session'
 const base = `${API_PREFIX}/auth`
 
 export const authApi = {
-  async register(payload: RegisterRequest): Promise<void> {
-    await apiClient.post(`${base}/register`, payload)
+  async register(payload: RegisterRequest): Promise<AuthSession | void> {
+    const { data } = await apiClient.post(`${base}/register`, payload)
+    try {
+      return extractAuthSession(data)
+    } catch {
+      return undefined
+    }
   },
 
   async login(payload: LoginRequest): Promise<AuthSession> {

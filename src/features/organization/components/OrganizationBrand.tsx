@@ -13,6 +13,8 @@ export interface OrganizationBrandProps {
   subtitle?: string
   /** Size variant */
   size?: 'sm' | 'md' | 'lg'
+  /** Header tone variant */
+  tone?: 'default' | 'onPrimary'
   /** Toggle logo image / icon visibility */
   showLogo?: boolean
   /** Toggle name text visibility */
@@ -53,6 +55,7 @@ export function OrganizationBrand({
   logo: propLogo,
   subtitle,
   size = 'md',
+  tone = 'default',
   showLogo = true,
   showName = true,
   showSubtitle = true,
@@ -61,11 +64,11 @@ export function OrganizationBrand({
   logoClassName,
   nameClassName,
 }: OrganizationBrandProps) {
-  const { organization, organizationName: contextName, organizationLogo: contextLogo, hasOrganization } = useOrganization()
+  const { organization, organizationName: contextName, organizationLogo: contextLogo, logoUrl: contextLogoUrl, hasOrganization } = useOrganization()
   const [imgError, setImgError] = useState(false)
 
   const activeName = propName ?? contextName ?? organization?.name ?? (hasOrganization ? 'Workspace' : fallbackName)
-  const rawLogo = propLogo ?? contextLogo ?? organization?.logo
+  const rawLogo = propLogo ?? contextLogo ?? contextLogoUrl ?? organization?.logo ?? organization?.logoUrl
   const activeLogoUrl = resolveLogoUrl(rawLogo)
   const isDefaultGeneric = !hasOrganization && !propName
 
@@ -102,7 +105,9 @@ export function OrganizationBrand({
             sizeClasses.logoBox,
             activeLogoUrl && !imgError
               ? 'bg-surface p-0.5'
-              : 'bg-primary text-white font-black tracking-wider',
+              : tone === 'onPrimary'
+                ? 'bg-white/15 text-white font-black tracking-wider border-white/20'
+                : 'bg-primary text-white font-black tracking-wider',
             logoClassName,
           )}
         >
@@ -128,7 +133,8 @@ export function OrganizationBrand({
           {showName && (
             <p
               className={cn(
-                'truncate leading-tight text-fg font-extrabold tracking-tight',
+                'truncate leading-tight font-extrabold tracking-tight',
+                tone === 'onPrimary' ? 'text-white' : 'text-fg',
                 sizeClasses.name,
                 nameClassName,
               )}

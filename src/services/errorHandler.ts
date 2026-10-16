@@ -15,21 +15,28 @@ export class AppError extends Error implements ApiErrorShape {
   }
 }
 
+/** Never show stack traces or huge server dumps to users. */
+function isSafeMessage(text: string): boolean {
+  return text.trim().length > 0 && text.length <= 300 && !/\n\s+at\s/.test(text)
+}
+
 /** Best-effort message pick – the backend does not document one error schema. */
 function pickMessage(data: unknown): string | undefined {
-  if (typeof data === 'string' && data.trim()) return data
+  if (typeof data === 'string') return isSafeMessage(data) ? data : undefined
   if (data && typeof data === 'object') {
     const record = data as Record<string, unknown>
-    if (typeof record.message === 'string' && record.message.trim()) return record.message
-    if (typeof record.error === 'string' && record.error.trim()) return record.error
+    if (typeof record.message === 'string' && isSafeMessage(record.message)) return record.message
+    if (typeof record.error === 'string' && isSafeMessage(record.error)) return record.error
   }
   return undefined
 }
 
 function fallbackForStatus(status: number): string {
+  if (status === 400 || status === 422) return 'Please check your information and try again.'
   if (status === 401) return 'Your session has expired. Please sign in again.'
   if (status === 403) return 'You do not have access to this.'
   if (status === 404) return 'We could not find what you were looking for.'
+  if (status === 409) return 'This already exists. Please try different details.'
   if (status >= 500) return 'The server ran into a problem. Please try again shortly.'
   return 'Something went wrong. Please try again.'
 }

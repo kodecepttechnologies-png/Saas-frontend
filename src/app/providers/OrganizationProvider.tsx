@@ -1,82 +1,90 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { organizationFromUser } from '@/features/organization/utils/organization'
-import { organizationStorage } from '@/features/organization/utils/organizationStorage'
+import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { organizationKeys } from '@/features/organization/api/organizationKeys'
 import type { Organization } from '@/features/organization/types/organization.types'
+import { organizationFromUser, organizationOwnerKey } from '@/features/organization/utils/organization'
+import { organizationStorage } from '@/features/organization/utils/organizationStorage'
 import { useAuth } from '@/hooks/useAuth'
 import { OrganizationContext, type OrganizationContextValue } from './organizationContext'
 
+/** Query roots that are not tenant data and must survive an organization change. */
+const KEEP_ROOTS = new Set<unknown>(['auth', organizationKeys.all[0]])
+
+/** Server data (/auth/me) wins over the locally remembered organization; the local copy only fills gaps. */
+function mergeOrganization(
+  fromUser: Organization | null | undefined,
+  cached: Organization | null | undefined,
+): Organization | null {
+  if (!fromUser) return cached ?? null
+  if (!fromUser.id) return cached ?? fromUser
+  if (cached && cached.id === fromUser.id) {
+    const defined = Object.fromEntries(Object.entries(fromUser).filter(([, value]) => value !== undefined))
+    return { ...cached, ...defined } as Organization
+  }
+  return fromUser ?? null
+}
+
 export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const { user, status } = useAuth()
-  const [storedOrg, setStoredOrg] = useState<Organization | null>(() => organizationStorage.get())
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const userId = organizationOwnerKey(user)
 
-  // Source of truth: what the backend reports for the authenticated user (/auth/me)
-  const userOrg = useMemo(() => organizationFromUser(user), [user])
+  // Local read, not a network call: the backend has no "get organization" endpoint.
+  const { data: cached } = useQuery<Organization | null>({
+    queryKey: organizationKeys.current(userId),
+    queryFn: () => (userId ? organizationStorage.get(userId) : null),
+    initialData: () => (userId ? organizationStorage.get(userId) : null),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  })
 
-  // Merge server org with stored org (server overrides, but local fields fill in if server only gave ID)
-  const activeOrg = useMemo<Organization | null>(() => {
-    if (userOrg && userOrg.id) {
-      if (storedOrg && storedOrg.id === userOrg.id) {
-        return {
-          ...storedOrg,
-          ...userOrg,
-          name: userOrg.name && userOrg.name !== 'Workspace' ? userOrg.name : (storedOrg.name || 'Workspace'),
-          logo: userOrg.logo || storedOrg.logo,
-        }
-      }
-      return userOrg
-    }
-    return storedOrg
-  }, [userOrg, storedOrg])
+  const organization = useMemo(() => mergeOrganization(organizationFromUser(user), cached), [user, cached])
+  const organizationId = organization?.id
 
-  // Tenant isolation & security: clear organization identity when unauthenticated
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      organizationStorage.clear()
-      setStoredOrg(null)
-    }
-  }, [status])
+  const setOrganization = useCallback(
+    (next: Organization) => {
+      if (userId) organizationStorage.set(userId, next)
+      queryClient.setQueryData(organizationKeys.current(userId), next)
+    },
+    [queryClient, userId],
+  )
 
-  const setOrganization = useCallback((org: Organization) => {
-    organizationStorage.set(org)
-    setStoredOrg(org)
-  }, [])
-
-  const setOrganizationId = useCallback((id: string) => {
-    organizationStorage.set(id)
-    setStoredOrg((prev) => (prev ? { ...prev, id } : { id, name: 'Workspace' }))
-  }, [])
+  const setOrganizationId = useCallback(
+    (id: string) => {
+      const next: Organization = { id, name: organization?.name || 'Workspace' }
+      if (userId) organizationStorage.set(userId, next)
+      queryClient.setQueryData(organizationKeys.current(userId), next)
+    },
+    [organization?.name, queryClient, userId],
+  )
 
   const clearOrganization = useCallback(() => {
-    organizationStorage.clear()
-    setStoredOrg(null)
-  }, [])
+    if (userId) {
+      organizationStorage.clear(userId)
+    }
+    queryClient.setQueryData(organizationKeys.current(userId), null)
+  }, [queryClient, userId])
 
-  const organizationId = activeOrg?.id || undefined
-  const organizationName = activeOrg?.name || undefined
-  const organizationLogo = activeOrg?.logo || undefined
-  const hasOrganization = !!organizationId && organizationId.trim().length > 0
+  // Tenant isolation: when the active organization changes, refetch everything that depends on it.
+  const previousId = useRef(organizationId)
+  useEffect(() => {
+    if (previousId.current === organizationId) return
+    previousId.current = organizationId
+    void queryClient.invalidateQueries({ predicate: (query) => !KEEP_ROOTS.has(query.queryKey[0]) })
+  }, [organizationId, queryClient])
 
   const value = useMemo<OrganizationContextValue>(
     () => ({
-      organization: activeOrg,
+      organization,
       organizationId,
-      organizationName,
-      organizationLogo,
-      hasOrganization,
+      organizationName: organization?.name,
+      organizationLogo: organization?.logo,
+      hasOrganization: !!organizationId,
       setOrganization,
       setOrganizationId,
       clearOrganization,
     }),
-    [
-      activeOrg,
-      organizationId,
-      organizationName,
-      organizationLogo,
-      hasOrganization,
-      setOrganization,
-      setOrganizationId,
-      clearOrganization,
-    ],
+    [organization, organizationId, setOrganization, setOrganizationId, clearOrganization],
   )
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>

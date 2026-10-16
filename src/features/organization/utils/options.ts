@@ -1,31 +1,134 @@
 import type { SelectOption } from '@/components/ui'
 
-/**
- * ASSUMPTION TO VERIFY: accepted values for language and theme are undocumented.
- * Change these lists in one place if the backend expects different values.
- */
+export const industryOptions: SelectOption[] = [
+  {
+    value: '',
+    label: 'Select an industry',
+  },
+  {
+    value: 'Software',
+    label: 'Software / Technology',
+  },
+  {
+    value: 'Finance',
+    label: 'Finance & Banking',
+  },
+  {
+    value: 'Healthcare',
+    label: 'Healthcare & Life Sciences',
+  },
+  {
+    value: 'E-commerce',
+    label: 'E-commerce & Retail',
+  },
+  {
+    value: 'Education',
+    label: 'Education & EdTech',
+  },
+  {
+    value: 'Marketing',
+    label: 'Marketing & Advertising',
+  },
+  {
+    value: 'Real Estate',
+    label: 'Real Estate & Construction',
+  },
+  {
+    value: 'Consulting',
+    label: 'Consulting & Professional Services',
+  },
+  {
+    value: 'Manufacturing',
+    label: 'Manufacturing & Logistics',
+  },
+  {
+    value: 'Other',
+    label: 'Other',
+  },
+]
+
 export const languageOptions: SelectOption[] = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'hi', label: 'Hindi' },
+  {
+    value: 'en',
+    label: 'English',
+  },
+  {
+    value: 'es',
+    label: 'Spanish',
+  },
+  {
+    value: 'fr',
+    label: 'French',
+  },
+  {
+    value: 'de',
+    label: 'German',
+  },
+  {
+    value: 'hi',
+    label: 'Hindi',
+  },
 ]
 
 export const themeOptions: SelectOption[] = [
-  { value: 'dark', label: 'Dark' },
-  { value: 'light', label: 'Light' },
+  {
+    value: 'dark',
+    label: 'Dark',
+  },
+  {
+    value: 'light',
+    label: 'Light',
+  },
 ]
 
-const FALLBACK_TIMEZONES = ['UTC', 'Asia/Kolkata', 'Europe/London', 'Europe/Berlin', 'America/New_York', 'America/Los_Angeles', 'Asia/Dubai', 'Asia/Singapore', 'Australia/Sydney']
+const FALLBACK_TIMEZONES = [
+  'UTC',
+  'Asia/Kolkata',
+  'Europe/London',
+  'Europe/Berlin',
+  'America/New_York',
+  'America/Los_Angeles',
+  'Asia/Dubai',
+  'Asia/Singapore',
+  'Australia/Sydney',
+]
 
 export function getTimezoneOptions(): SelectOption[] {
-  // Intl.supportedValuesOf is newer than our TS lib target, so it is accessed defensively.
-  const intl = Intl as unknown as { supportedValuesOf?: (key: string) => string[] }
-  const zones = intl.supportedValuesOf?.('timeZone') ?? FALLBACK_TIMEZONES
-  return zones.map((z) => ({ value: z, label: z.replace(/_/g, ' ') }))
+  const intl = Intl as unknown as {
+    supportedValuesOf?: (
+      key: string,
+    ) => string[]
+  }
+
+  const zones =
+    intl.supportedValuesOf?.('timeZone') ??
+    FALLBACK_TIMEZONES
+
+  const normalizedZones = Array.from(
+    new Set(
+      zones.map((zone) =>
+        zone === 'Asia/Calcutta'
+          ? 'Asia/Kolkata'
+          : zone,
+      ),
+    ),
+  )
+
+  return normalizedZones.map((zone) => ({
+    value: zone,
+    label: zone.replace(/_/g, ' '),
+  }))
 }
 
 export function getDefaultTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  const timezone =
+    Intl.DateTimeFormat()
+      .resolvedOptions()
+      .timeZone
+
+  if (timezone === 'Asia/Calcutta') {
+    return 'Asia/Kolkata'
+  }
+
+  return timezone || 'UTC'
 }

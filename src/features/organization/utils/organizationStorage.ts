@@ -1,57 +1,36 @@
 import type { Organization } from '../types/organization.types'
 
-const KEY = 'saas.organization'
-const LEGACY_ID_KEY = 'saas.organizationId'
+const PREFIX = 'saas.organization.'
+
+function isOrganization(v: unknown): v is Organization {
+  return !!v && typeof v === 'object' && typeof (v as { id?: unknown }).id === 'string'
+}
 
 /**
- * Manages client-side persistence for the active organization identity.
- * Security rule: Never stores auth tokens or credentials.
- * The backend remains the source of truth; this preserves identity during navigation.
+ * Remembers the organization created in this browser, per user id, so signing out and in again
+ * does not repeat setup. Never stores tokens. Server data from /auth/me always wins over this.
  */
 export const organizationStorage = {
-  get(): Organization | null {
+  get(userId: string): Organization | null {
     try {
-      const raw = localStorage.getItem(KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw) as Organization
-        if (parsed && typeof parsed === 'object' && (parsed.id || parsed.name)) {
-          return parsed
-        }
-      }
-      const legacyId = localStorage.getItem(LEGACY_ID_KEY)
-      if (legacyId) {
-        return { id: legacyId, name: 'Workspace' }
-      }
-      return null
+      const raw = localStorage.getItem(PREFIX + userId)
+      if (!raw) return null
+      const parsed: unknown = JSON.parse(raw)
+      return isOrganization(parsed) ? parsed : null
     } catch {
       return null
     }
   },
-
-  getId(): string | undefined {
-    return this.get()?.id
-  },
-
-  set(org: Organization | string) {
+  set(userId: string, organization: Organization) {
     try {
-      if (typeof org === 'string') {
-        const existing = this.get()
-        const updated: Organization = existing ? { ...existing, id: org } : { id: org, name: 'Workspace' }
-        localStorage.setItem(KEY, JSON.stringify(updated))
-        localStorage.setItem(LEGACY_ID_KEY, org)
-      } else {
-        localStorage.setItem(KEY, JSON.stringify(org))
-        if (org.id) localStorage.setItem(LEGACY_ID_KEY, org.id)
-      }
+      localStorage.setItem(PREFIX + userId, JSON.stringify(organization))
     } catch {
-      /* ignore storage write failures (e.g. incognito) */
+      /* storage unavailable – setup state just won't persist */
     }
   },
-
-  clear() {
+  clear(userId: string) {
     try {
-      localStorage.removeItem(KEY)
-      localStorage.removeItem(LEGACY_ID_KEY)
+      localStorage.removeItem(PREFIX + userId)
     } catch {
       /* ignore */
     }

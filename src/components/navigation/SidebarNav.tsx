@@ -22,8 +22,8 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <OrganizationBrand
             size="md"
             subtitle={
-              organization?.workspaceUrl
-                ? `${organization.workspaceUrl}.workspace`
+              (organization?.slug || organization?.workspaceUrl)
+                ? `${organization.slug || organization.workspaceUrl}.workspace`
                 : hasOrganization
                   ? 'Active Workspace'
                   : 'Setup Required'

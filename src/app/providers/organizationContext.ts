@@ -10,6 +10,8 @@ export interface OrganizationContextValue {
   organizationName: string | undefined
   /** Logo URL or path of the active organization. */
   organizationLogo: string | undefined
+  /** Alias for organizationLogo */
+  logoUrl?: string
   /** True when active organization is present. */
   hasOrganization: boolean
   /** Sets the full active organization entity. */

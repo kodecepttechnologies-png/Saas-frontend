@@ -43,7 +43,7 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Access control',
     items: [
-      { label: 'Roles', to: '/roles', icon: ShieldCheck, description: 'Group permissions into roles', enabled: false },
+      { label: 'Roles', to: '/roles', icon: ShieldCheck, description: 'Group permissions into roles', enabled: true },
       { label: 'Permissions', to: '/permissions', icon: KeyRound, description: 'See what each feature allows', enabled: false },
     ],
   },
@@ -62,10 +62,9 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Settings',
     items: [
-      { label: 'Organization', to: '/organization/setup', icon: Settings, description: 'Set up your organization', enabled: true },
+      { label: 'Organization', to: '/settings/organization', icon: Settings, description: 'Organization details and branding', enabled: false },
     ],
   },
 ]
 
 export const allNavItems = navGroups.flatMap((g) => g.items)
-

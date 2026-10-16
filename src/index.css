@@ -24,6 +24,27 @@
   --color-warning: 245 158 11;
 }
 
+/*
+ * Light palette for the organization onboarding screens. Add `theme-light` to a wrapper and every
+ * shared component (Input, Select, Card, Alert...) switches, because they read these variables.
+ */
+.theme-light {
+  color-scheme: light;
+
+  --color-background: 248 246 253;
+  --color-surface: 255 255 255;
+  --color-surface-secondary: 255 255 255;
+  --color-border: 221 214 240;
+
+  --color-fg: 17 12 31;
+  --color-fg-secondary: 55 48 80;
+  --color-fg-muted: 107 100 130;
+
+  --color-danger: 220 38 38;
+  --color-success: 21 128 61;
+  --color-warning: 180 83 9;
+}
+
 @layer base {
   html,
   body,
